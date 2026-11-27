@@ -48,21 +48,90 @@ def main(verbose: bool = typer.Option(False, "--verbose", "-v")):
 
 @app.command()
 def init():
-    """Create database, vault folders, and check dependencies."""
-    db.init_db()
-    console.print(f"[green]✓[/] database at {DB_PATH}")
+    """Create the database and vault folders, then run all health checks."""
+    doctor()
+
+
+@app.command()
+def doctor(skip_llm: bool = typer.Option(False, help="Skip the live claude -p test call")):
+    """Check every prerequisite and print how to fix anything missing."""
+    import platform
+    import shutil
+
+    import httpx
+
+    problems = 0
+
+    def ok(msg):
+        console.print(f"[green]✓[/] {msg}")
+
+    def bad(msg, fix):
+        nonlocal problems
+        problems += 1
+        console.print(f"[red]✗[/] {msg}\n    [yellow]fix:[/] {fix}")
+
+    def warn(msg):
+        console.print(f"[yellow]![/] {msg}")
+
+    ok(f"macOS {platform.mac_ver()[0]}") if sys.platform == "darwin" else warn(
+        "Not macOS: everything works except `intel schedule` (launchd) and notifications. Use cron instead.")
+    ok(f"Python {platform.python_version()} (managed by uv)")
+
+    # Ollama + embedding model
+    emb = settings()["embedding"]
+    if not shutil.which("ollama"):
+        bad("Ollama not installed", "brew install ollama && brew services start ollama")
+    else:
+        try:
+            tags = httpx.get(f"{emb['ollama_url']}/api/tags", timeout=5).json()
+            names = {m["name"].split(":")[0] for m in tags.get("models", [])}
+            ok("Ollama server running")
+            if emb["model"] in names:
+                ok(f"embedding model {emb['model']} installed")
+            else:
+                bad(f"embedding model {emb['model']} not pulled", f"ollama pull {emb['model']}")
+        except Exception:
+            bad("Ollama installed but not running", "brew services start ollama   (or open the Ollama app)")
+
+    # Database
     try:
-        from .embed import embed_one
-        embed_one("test")
-        console.print("[green]✓[/] Ollama embeddings working")
+        db.init_db()
+        ok(f"database ready at {DB_PATH}")
+    except db.EmbeddingMismatch as e:
+        bad(str(e).split(". Run")[0], "uv run intel reembed")
     except Exception as e:
-        console.print(f"[red]✗[/] Ollama embeddings: {e}\n  run: ollama pull {settings()['embedding']['model']}")
-    from .llm import ask
-    try:
-        ask("Reply with OK", timeout=90)
-        console.print("[green]✓[/] claude -p working")
-    except Exception as e:
-        console.print(f"[red]✗[/] claude -p: {e}")
+        bad(f"database: {e}", "check data/ is writable")
+
+    # Claude CLI
+    from .llm import _claude_bin
+    cbin = _claude_bin()
+    if not Path(cbin).exists():
+        bad("Claude Code CLI not found", "curl -fsSL https://claude.ai/install.sh | bash   then run `claude` once to log in")
+    else:
+        ok(f"Claude Code CLI at {cbin}")
+        if not skip_llm:
+            from .llm import ask
+            try:
+                ask("Reply with OK", timeout=120)
+                ok("claude -p works (logged in)")
+            except Exception as e:
+                bad(f"claude -p failed: {str(e)[:200]}", "run `claude` in a terminal and log in (needs a Claude Pro/Max plan or API access)")
+
+    # Optional pieces
+    r = subprocess.run(["launchctl", "print", f"gui/{os.getuid()}/com.intel.daily"], capture_output=True) \
+        if sys.platform == "darwin" else None
+    if r is not None:
+        ok("daily schedule installed") if r.returncode == 0 else warn(
+            "daily schedule not installed (optional): uv run intel schedule install")
+    g = settings().get("git", {})
+    warn("vault git auto-sync is OFF (optional; enable in config/settings.local.yaml)") if not g.get("auto_commit") \
+        else ok(f"vault git auto-sync ON (push={g.get('auto_push')})")
+
+    console.print()
+    if problems:
+        console.print(f"[red]{problems} problem(s) found.[/] Fix them, then re-run: uv run intel doctor")
+        raise typer.Exit(1)
+    console.print("[green bold]All good.[/] Next: uv run intel run   then   uv run intel ui")
 
 
 @app.command()

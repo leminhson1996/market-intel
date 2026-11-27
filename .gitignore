@@ -4,3 +4,6 @@ logs/
 __pycache__/
 *.pyc
 .DS_Store
+config/settings.local.yaml
+launchd/
+data/intel.db.bak-*

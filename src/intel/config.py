@@ -21,9 +21,21 @@ def _load(name: str) -> dict:
         return yaml.safe_load(f) or {}
 
 
+def _merge(base: dict, over: dict) -> dict:
+    out = dict(base)
+    for k, v in over.items():
+        out[k] = _merge(out[k], v) if isinstance(v, dict) and isinstance(out.get(k), dict) else v
+    return out
+
+
 @lru_cache
 def settings() -> dict:
-    return _load("settings.yaml")
+    """settings.yaml (shared, committed) overlaid with settings.local.yaml (per machine, git-ignored)."""
+    base = _load("settings.yaml")
+    local = CONFIG_DIR / "settings.local.yaml"
+    if local.exists():
+        base = _merge(base, yaml.safe_load(local.read_text()) or {})
+    return base
 
 
 @lru_cache
