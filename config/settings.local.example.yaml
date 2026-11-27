@@ -1,9 +1,8 @@
 # Copy to config/settings.local.yaml to override settings.yaml on this machine only.
-# Example: back up your vault to YOUR OWN git remote after every run.
-# git:
-#   auto_commit: true
-#   auto_push: true
-#
 # Example: use a different default model
 # llm:
 #   model: opus
+#
+# Example: analyze fewer stories per run to save Claude usage
+# pipeline:
+#   analyze_top_n: 8

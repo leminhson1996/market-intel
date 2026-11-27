@@ -15,7 +15,6 @@ The script is idempotent. It:
 - checks the Claude Code CLI
 - runs `uv sync`
 - starts Ollama and pulls the embedding model
-- empties the shared vault when the database is new
 - runs `uv run intel doctor`
 
 If it stops, read the error and fix it:
@@ -39,7 +38,7 @@ Then write the answers into `config/company_profile.yaml`. Keep the YAML keys th
 
 ## 3. Ask about automation
 - **Schedule:** ask whether it should run automatically at 07:00, 13:00 and 19:00, plus a weekly memo on Monday at 07:45. If yes, run `uv run intel schedule install`.
-- **Git backup:** ask whether they want the vault auto-committed after each run. Only enable auto-push if `git remote -v` points to a repo the user owns (not the original author's). To enable it, create `config/settings.local.yaml` from `config/settings.local.example.yaml`. Never edit `settings.yaml` for per-machine choices.
+- Per-machine choices go in `config/settings.local.yaml` (copy from `config/settings.local.example.yaml`). Never edit `settings.yaml` for them.
 
 ## 4. First run
 Run `uv run intel run`. It takes about 3–5 minutes: it collects about 450 items, analyzes the top 15 stories with Claude, and writes the daily brief. Then:
@@ -49,5 +48,5 @@ Run `uv run intel run`. It takes about 3–5 minutes: it collects about 450 item
 
 ## Rules
 - Don't edit source code to work around setup problems. Fix the environment instead.
-- Don't commit or push unless the user asks.
+- Don't commit or push unless the user asks. Never commit `vault/` or `data/`: analysis output stays local.
 - If something fails twice in the same way, stop and show the user the exact error.

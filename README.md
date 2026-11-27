@@ -48,11 +48,10 @@ The script is safe to re-run. It:
 1. installs `uv` and `ollama` with Homebrew, and installs Claude Code if it's missing
 2. installs the Python dependencies
 3. starts Ollama and downloads the `bge-m3` embedding model
-4. offers to start you with an empty vault (the repo ships with the author's notes)
-5. runs `intel doctor`, a health check of everything
-6. offers to install the daily schedule
+4. runs `intel doctor`, a health check of everything
+5. offers to install the daily schedule
 
-Non-interactive: `./scripts/setup.sh --yes` (accepts the defaults). Other flags: `--no-schedule` and `--keep-vault`.
+Non-interactive: `./scripts/setup.sh --yes` (accepts the defaults). Other flag: `--no-schedule`.
 
 ### First run
 ```bash
@@ -63,7 +62,7 @@ uv run intel ui      # opens the dashboard at http://127.0.0.1:8787
 ### Make it yours (optional)
 - **Your business:** edit `config/company_profile.yaml` with your industry, markets, strengths, goals and topics to watch. Scoring and strategy advice adapt to it.
 - **Your sources:** add RSS feeds to `config/sources.yaml`.
-- **Per-machine settings:** copy `config/settings.local.example.yaml` to `config/settings.local.yaml`. This file is git-ignored. It's where to turn on vault backup to *your own* git remote, change the default model, and so on.
+- **Per-machine settings:** copy `config/settings.local.example.yaml` to `config/settings.local.yaml`. This file is git-ignored. It's where to change the default model, how many stories are analyzed per run, and so on.
 
 ### Something not working?
 ```bash
@@ -115,7 +114,6 @@ Open `claude` in this folder and ask things like *"What were the biggest AI sign
 | `intel stats` | Row counts and source health |
 | `intel schedule install\|uninstall\|status` | Daily (07:00/13:00/19:00) and weekly (Mon 07:45) launchd jobs |
 | `intel ui` | Local web dashboard |
-| `intel gitsync` | Commit and push `vault/` now (if enabled in settings) |
 | `intel reembed` | Rebuild all vectors after changing `embedding.model` |
 | `intel mcp` | MCP server (stdio), registered in `.mcp.json` |
 
@@ -134,7 +132,7 @@ All commands are run as `uv run intel …`.
 | Markdown vault | `vault/` (open it as an Obsidian vault) | `Insights/`, `Briefs/`, `Memos/`, `Predictions/`, `Entities/`, all wiki-linked |
 | Raw archive | `data/raw/YYYY-MM-DD.jsonl` | Every new item as collected (pruned after `retention.raw_days`) |
 
-`data/` is git-ignored. Each person builds their own memory.
+`data/` and `vault/` are git-ignored: analysis output never goes into git, and each person builds their own memory. To back it up, copy those two folders (or use Time Machine).
 
 ### Scoring and analysis
 Cluster score = (source breadth + volume + engagement + 24h velocity) × source weight × recency × relevance to your profile × your feedback.

@@ -176,11 +176,6 @@ def run_prediction(pid: int) -> None:
     path = write_note(p, result)
     with db.connect() as conn:
         conn.execute("UPDATE predictions SET note_path=? WHERE id=?", (str(path), pid))
-    try:
-        from .gitsync import sync
-        sync(f"prediction #{pid} ({p['horizon']}, {p['model']})")
-    except Exception as e:
-        log.warning("git sync after prediction failed: %s", e)
 
 
 def create(topic: str | None, horizon: str, model: str, language: str = "en", background: bool = True) -> int:

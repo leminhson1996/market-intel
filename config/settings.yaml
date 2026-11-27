@@ -33,16 +33,6 @@ noise_patterns:
   - "^(the )?best .* (to buy|of 20\\d\\d)"
   - "horoscope|wordle|crossword"
 
-# Auto-commit the Markdown vault after each run/weekly memo and push to GitHub.
-# Off by default so people who clone this repo never push to someone else's remote.
-# Turn it on per machine in config/settings.local.yaml (git-ignored), e.g.:
-#   git: {auto_commit: true, auto_push: true}
-git:
-  auto_commit: false
-  auto_push: false
-  remote: origin
-  paths: [vault]          # only these paths are committed; code changes are never auto-committed
-
 # Predict: on-demand forecasts (runs only when you click Predict / run `intel predict`)
 predict:
   default_model: claude-sonnet-5-5

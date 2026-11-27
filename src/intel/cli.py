@@ -123,9 +123,6 @@ def doctor(skip_llm: bool = typer.Option(False, help="Skip the live claude -p te
     if r is not None:
         ok("daily schedule installed") if r.returncode == 0 else warn(
             "daily schedule not installed (optional): uv run intel schedule install")
-    g = settings().get("git", {})
-    warn("vault git auto-sync is OFF (optional; enable in config/settings.local.yaml)") if not g.get("auto_commit") \
-        else ok(f"vault git auto-sync ON (push={g.get('auto_push')})")
 
     console.print()
     if problems:
@@ -179,16 +176,6 @@ def weekly():
     from .reports import weekly_memo
     p = weekly_memo()
     console.print(f"[green]memo:[/] {p}" if p else "[yellow]no insights this week[/]")
-    if p:
-        from .gitsync import sync
-        console.print({"git": sync(f"weekly memo {p.stem}")})
-
-
-@app.command()
-def gitsync():
-    """Commit and push vault changes now."""
-    from .gitsync import sync
-    console.print(sync("manual sync"))
 
 
 @app.command()
@@ -212,9 +199,6 @@ def run(top: int = typer.Option(None, help="Clusters to analyze"), skip_analyze:
         p = daily_brief()
         stats["brief"] = str(p) if p else None
     prune()
-    from .gitsync import sync
-    stats["git"] = sync(f"pipeline run, {stats.get('analyze', {}).get('analyzed', 0)} new insights")
-    log.info("git: %s", stats["git"])
     _record_run("run", stats, t)
     console.print(stats)
     _notify("Market intel", f"{stats.get('analyze', {}).get('analyzed', 0)} new insights. Brief ready.")

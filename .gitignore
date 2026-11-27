@@ -6,4 +6,5 @@ __pycache__/
 .DS_Store
 config/settings.local.yaml
 launchd/
+vault/
 data/intel.db.bak-*

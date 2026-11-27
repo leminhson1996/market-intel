@@ -2,21 +2,19 @@
 # One-step setup for market-intel on macOS. Safe to re-run (idempotent).
 #
 #   ./scripts/setup.sh                 interactive
-#   ./scripts/setup.sh --yes           accept all defaults (installs schedule, starts with an empty vault)
-#   ./scripts/setup.sh --yes --no-schedule --keep-vault
+#   ./scripts/setup.sh --yes           accept all defaults (installs the schedule)
+#   ./scripts/setup.sh --yes --no-schedule
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
-YES=0; SCHEDULE=""; VAULT=""
+YES=0; SCHEDULE=""
 for a in "$@"; do
   case "$a" in
     --yes|-y) YES=1 ;;
     --schedule) SCHEDULE=yes ;;
     --no-schedule) SCHEDULE=no ;;
-    --fresh-vault) VAULT=fresh ;;
-    --keep-vault) VAULT=keep ;;
     -h|--help) sed -n 2,7p "$0"; exit 0 ;;
     *) echo "unknown option: $a"; exit 2 ;;
   esac
@@ -68,15 +66,6 @@ curl -fsS http://localhost:11434/api/tags >/dev/null 2>&1 && ok "Ollama server r
 MODEL="$(uv run python -c 'from intel.config import settings; print(settings()["embedding"]["model"])')"
 if ollama list | awk 'NR>1{print $1}' | sed 's/:.*//' | grep -qx "$MODEL"; then ok "$MODEL already pulled"
 else echo "  pulling $MODEL (~1.2 GB, one time)…"; ollama pull "$MODEL" >/dev/null && ok "$MODEL pulled"; fi
-
-bold "Your memory vault"
-NOTES=$(find vault -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
-if [[ ! -f data/intel.db && "$NOTES" -gt 0 ]]; then
-  echo "  vault/ contains $NOTES notes from whoever shared this repo. Your own database starts empty."
-  if [[ $VAULT == fresh ]] || { [[ -z $VAULT ]] && ask "Start with an empty vault? (recommended)" y; }; then
-    find vault -name '*.md' -delete && ok "vault emptied (the shared notes remain in git history)"
-  else ok "kept shared vault notes as reference"; fi
-else ok "vault ready"; fi
 
 bold "Health check"
 uv run intel doctor || die "Fix the items above, then re-run ./scripts/setup.sh"

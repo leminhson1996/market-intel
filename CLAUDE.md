@@ -14,5 +14,6 @@ If the user asks to set up, install or get started, or the app isn't working on 
 
 ## Conventions
 - To answer questions about markets or trends, prefer the `market-intel` MCP tools or `uv run intel search/ask`.
-- Per-machine settings go in `config/settings.local.yaml` (git-ignored), which is merged over `settings.yaml`. Git auto-sync is off by default in the shared settings.
+- Per-machine settings go in `config/settings.local.yaml` (git-ignored), which is merged over `settings.yaml`.
+- Never commit analysis output (`vault/`, `data/`); both are git-ignored. Commit code, config and docs only.
 - Schema changes: add migrations in `db.init_db()`. Never drop `data/intel.db`, because it holds the accumulated long-term memory.
