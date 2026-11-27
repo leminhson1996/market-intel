@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Market Intel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface-1: #ffffff; --surface-2: #f1f1ee; --border: #e3e3df;
+  --text-primary: #191919; --text-secondary: #666666; --text-tertiary: #8a8a8a;
+  --accent: #257de0; --accent-soft: #e6f0fc; --accent-ink: #1757ac;
+  --series-1: #257de0; --series-2: #f47230; --series-3: #00b894; --series-4: #f2a600;
+  --series-5: #ee7fac; --series-6: #008a17; --series-7: #6a4ce2; --series-8: #ec4647;
+  --seq-1: #cce3fd; --seq-2: #84b9f3; --seq-3: #338ced; --seq-4: #1b64be;
+  --good: #0a7d24; --bad: #c8322f; --grid: #ececea;
+  --shadow: 0 1px 2px rgba(0,0,0,.04), 0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #111111; --surface-1: #191919; --surface-2: #222222; --border: #2e2e2e;
+    --text-primary: #efefef; --text-secondary: #9c9c9c; --text-tertiary: #777777;
+    --accent: #338ced; --accent-soft: #15273d; --accent-ink: #84b9f3;
+    --series-1: #338ced; --series-2: #e76624; --series-3: #00a888; --series-4: #d28e05;
+    --series-5: #e24d8b; --series-6: #0aac23; --series-7: #9887ef; --series-8: #eb6263;
+    --seq-1: #0f4a96; --seq-2: #1b64be; --seq-3: #338ced; --seq-4: #84b9f3;
+    --good: #3fbf5b; --bad: #eb6263; --grid: #262626;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #111111; --surface-1: #191919; --surface-2: #222222; --border: #2e2e2e;
+  --text-primary: #efefef; --text-secondary: #9c9c9c; --text-tertiary: #777777;
+  --accent: #338ced; --accent-soft: #15273d; --accent-ink: #84b9f3;
+  --series-1: #338ced; --series-2: #e76624; --series-3: #00a888; --series-4: #d28e05;
+  --series-5: #e24d8b; --series-6: #0aac23; --series-7: #9887ef; --series-8: #eb6263;
+  --seq-1: #0f4a96; --seq-2: #1b64be; --seq-3: #338ced; --seq-4: #84b9f3;
+  --good: #3fbf5b; --bad: #eb6263; --grid: #262626;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { background: var(--bg); color: var(--text-primary); font: 14px/1.5 Inter, -apple-system, system-ui, sans-serif; }
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+.app { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+nav.side { background: var(--surface-1); border-right: 1px solid var(--border); padding: 20px 12px; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; gap: 2px; }
+.brand { font-weight: 700; font-size: 16px; padding: 0 10px 18px; display: flex; align-items: center; gap: 8px; }
+.brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+nav.side a { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; color: var(--text-secondary); font-weight: 500; }
+nav.side a:hover { background: var(--surface-2); text-decoration: none; color: var(--text-primary); }
+nav.side a.active { background: var(--accent-soft); color: var(--accent-ink); }
+nav.side svg { width: 18px; height: 18px; flex: none; }
+.side-foot { margin-top: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+main { padding: 28px 32px 60px; min-width: 0; max-width: 1400px; }
+h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -.01em; }
+h2 { font-size: 15px; margin: 0 0 12px; }
+.sub { color: var(--text-secondary); margin-bottom: 22px; }
+.card { background: var(--surface-1); border: 1px solid var(--border); border-radius: 12px; padding: 18px; box-shadow: var(--shadow); min-width: 0; }
+.grid { display: grid; gap: 16px; }
+.kpis { grid-template-columns: repeat(4, minmax(0,1fr)); margin-bottom: 16px; }
+.kpi .label { color: var(--text-secondary); font-size: 12px; font-weight: 500; text-transform: uppercase; letter-spacing: .04em; }
+.kpi .value { font-size: 28px; font-weight: 700; letter-spacing: -.02em; margin-top: 2px; }
+.kpi .hint { color: var(--text-tertiary); font-size: 12px; }
+.two { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); }
+.btn { background: var(--surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-weight: 500; }
+.btn:hover { border-color: var(--text-tertiary); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.btn.primary:disabled { opacity: .6; cursor: progress; }
+.btn.sm { padding: 3px 9px; font-size: 12px; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--border); font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+.chip.click { cursor: pointer; }
+.chip.click:hover { border-color: var(--accent); color: var(--accent-ink); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.muted { color: var(--text-secondary); }
+.small { font-size: 12px; }
+.row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.spacer { flex: 1; }
+
+/* insight list */
+.ins { padding: 12px 0; border-top: 1px solid var(--border); cursor: pointer; display: grid; grid-template-columns: 52px 1fr; gap: 12px; }
+.ins:first-child { border-top: 0; padding-top: 0; }
+.ins:hover .ins-title { color: var(--accent); }
+.ins-title { font-weight: 600; }
+.ins-why { color: var(--text-secondary); font-size: 13px; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.impact { width: 52px; text-align: center; }
+.impact .n { font-size: 20px; font-weight: 700; line-height: 1.1; }
+.impact .l { font-size: 10px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .05em; }
+.meter { display: flex; gap: 2px; margin-top: 4px; justify-content: center; }
+.meter i { width: 3px; height: 8px; border-radius: 1px; background: var(--grid); }
+.meter i.on { background: var(--accent); }
+
+/* bars */
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar-row { display: grid; grid-template-columns: 120px 1fr 28px; gap: 10px; align-items: center; font-size: 13px; position: relative; }
+.bar-row .name { color: var(--text-secondary); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { height: 14px; position: relative; }
+.bar-fill { height: 100%; background: var(--series-1); border-radius: 0 4px 4px 0; min-width: 3px; }
+.bar-row .val { text-align: right; font-variant-numeric: tabular-nums; }
+.bar-row:hover .bar-fill { filter: brightness(1.1); }
+
+/* tables */
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; padding: 8px 10px; border-bottom: 1px solid var(--border); }
+td { padding: 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--surface-2); }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* filters */
+.filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+.filters input, .filters select, textarea { background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.filters input { min-width: 240px; }
+
+/* drawer */
+.scrim { position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 20; }
+.scrim.open { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; top: 0; right: 0; bottom: 0; width: min(760px, 100vw); background: var(--surface-1); border-left: 1px solid var(--border); transform: translateX(100%); transition: transform .25s ease; z-index: 21; overflow-y: auto; padding: 26px 30px 60px; }
+.drawer.open { transform: none; }
+.drawer h1 { font-size: 21px; line-height: 1.3; margin: 8px 0 10px; }
+.sec { margin-top: 22px; }
+.sec h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--text-secondary); margin: 0 0 8px; }
+.sec ul { margin: 0; padding-left: 18px; }
+.sec li { margin: 3px 0; }
+.moves { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+.moves .card { padding: 12px; box-shadow: none; background: var(--surface-2); }
+.moves h4 { margin: 0 0 6px; font-size: 13px; }
+.moves ul { padding-left: 16px; font-size: 13px; }
+.opp { padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; }
+.opp b { display: block; }
+.wl { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.close { position: absolute; top: 18px; right: 20px; }
+
+/* markdown */
+.md h1 { font-size: 20px; } .md h2 { font-size: 16px; margin-top: 22px; } .md h3 { font-size: 14px; }
+.md table { font-size: 13px; margin: 10px 0; } .md td, .md th { padding: 6px 8px; }
+.md ul { padding-left: 20px; } .md p { margin: 8px 0; }
+.md code { background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+
+/* graph */
+#graph { height: calc(100vh - 210px); min-height: 480px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface-1); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--text-secondary); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+/* misc */
+.spinner { width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; display: inline-block; vertical-align: middle; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.log { background: var(--surface-2); border-radius: 8px; padding: 10px; font: 12px/1.45 ui-monospace, Menlo, monospace; max-height: 280px; overflow: auto; white-space: pre-wrap; }
+.tip { position: fixed; pointer-events: none; background: var(--text-primary); color: var(--surface-1); padding: 6px 9px; border-radius: 6px; font-size: 12px; z-index: 50; opacity: 0; transition: opacity .1s; max-width: 280px; }
+.empty { color: var(--text-tertiary); padding: 20px 0; text-align: center; }
+.cite { font-size: 11px; background: var(--accent-soft); color: var(--accent-ink); padding: 0 6px; border-radius: 4px; cursor: pointer; white-space: nowrap; }
+.spark path { fill: none; stroke: var(--series-1); stroke-width: 2; }
+.toast { position: fixed; bottom: 20px; right: 20px; background: var(--text-primary); color: var(--surface-1); padding: 10px 14px; border-radius: 8px; z-index: 60; display: none; }
+
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  nav.side { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 16px; }
+  .brand, .side-foot { display: none; }
+  main { padding: 18px 16px 40px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .two, .moves, .wl { grid-template-columns: 1fr; }
+  .filters input { min-width: 0; flex: 1; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="side">
+    <div class="brand"><span class="dot"></span>Market Intel</div>
+    <a href="#/" data-route="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
+    <a href="#/insights" data-route="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Insights</a>
+    <a href="#/trends" data-route="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trends</a>
+    <a href="#/graph" data-route="graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5l3.5 8.5M17 7.5l-3.5 8.5M7.5 6h9"/></svg>Knowledge graph</a>
+    <a href="#/ask" data-route="ask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search &amp; Ask</a>
+    <a href="#/reports" data-route="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Reports</a>
+    <a href="#/sources" data-route="sources"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/></svg>Sources &amp; runs</a>
+    <div class="side-foot">
+      <button class="btn primary" id="runBtn" onclick="startRun('run')">Run pipeline now</button>
+      <div class="small muted" id="runInfo"></div>
+      <button class="btn sm" onclick="toggleTheme()">Toggle theme</button>
+    </div>
+  </nav>
+  <main id="view"></main>
+</div>
+<div class="scrim" id="scrim" onclick="closeDrawer()"></div>
+<aside class="drawer" id="drawer"></aside>
+<div class="tip" id="tip"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const md = s => DOMPurify.sanitize(marked.parse(s || ''));
+const api = async (p, opts) => { const r = await fetch(p, opts); if (!r.ok) throw new Error((await r.text()) || r.status); return r.json(); };
+const post = (p, body) => api(p, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)});
+const pct = x => Math.round((x || 0) * 100) + '%';
+const day = s => (s || '').slice(0, 10);
+const ago = s => { if (!s) return '—'; const t = new Date(s.replace(' ', 'T') + (s.endsWith('Z') ? '' : 'Z')); const m = Math.round((Date.now() - t) / 60000); return m < 60 ? m + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago'; };
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; setTimeout(() => t.style.display = 'none', 2500); }
+
+// theme
+function toggleTheme() {
+  const cur = document.documentElement.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  const next = cur === 'dark' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = next;
+  try { localStorage.setItem('theme', next); } catch {}
+  if (location.hash.startsWith('#/graph')) route();
+}
+try { const t = localStorage.getItem('theme'); if (t) document.documentElement.dataset.theme = t; } catch {}
+
+// tooltip
+const tip = $('#tip');
+document.addEventListener('mousemove', e => {
+  const el = e.target.closest('[data-tip]');
+  if (!el) { tip.style.opacity = 0; return; }
+  tip.innerHTML = el.dataset.tip; tip.style.opacity = 1;
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - 300) + 'px'; tip.style.top = (e.clientY + 14) + 'px';
+});
+
+// --------------------------------------------------------------- components
+const meter = n => '<div class="meter">' + Array.from({length: 10}, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('') + '</div>';
+const insightRow = i => `
+  <div class="ins" onclick="openInsight(${i.id})">
+    <div class="impact"><div class="n">${i.impact}</div><div class="l">impact</div>${meter(i.impact)}</div>
+    <div>
+      <div class="ins-title">${esc(i.headline)}</div>
+      <div class="ins-why">${esc(i.why_it_matters)}</div>
+      <div class="chips" style="margin-top:6px">
+        <span class="chip">${esc(i.category)}</span><span class="chip">${esc(i.time_horizon)}</span>
+        <span class="chip">conf ${pct(i.confidence)}</span><span class="chip">${day(i.created_at)}</span>
+      </div>
+    </div>
+  </div>`;
+
+function barChart(data, labelKey, valKey, tipFn) {
+  if (!data.length) return '<div class="empty">No data yet</div>';
+  const max = Math.max(...data.map(d => d[valKey]));
+  return '<div class="bars">' + data.map(d => `
+    <div class="bar-row" data-tip="${esc(tipFn(d))}">
+      <div class="name">${esc(d[labelKey])}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(d[valKey] / max * 100).toFixed(1)}%"></div></div>
+      <div class="val">${d[valKey]}</div>
+    </div>`).join('') + '</div>';
+}
+
+function sparkline(hist) {
+  if (!hist || hist.length < 2) return '<span class="muted small">—</span>';
+  const w = 90, h = 24, vals = hist.map(x => x.n), mx = Math.max(...vals), mn = Math.min(...vals);
+  const pts = vals.map((v, i) => [i / (vals.length - 1) * (w - 4) + 2, h - 3 - (mx === mn ? .5 : (v - mn) / (mx - mn)) * (h - 6)]);
+  const tipTxt = hist.map(x => `${x.d}: ${x.n} items`).join('<br>');
+  return `<svg class="spark" width="${w}" height="${h}" data-tip="${esc(tipTxt)}"><path d="M${pts.map(p => p.join(',')).join('L')}"/></svg>`;
+}
+
+// --------------------------------------------------------------- views
+const views = {
+  async dashboard() {
+    const d = await api('/api/overview');
+    const c = d.counts;
+    return `
+      <h1>Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}</h1>
+      <div class="sub">Last pipeline run ${d.last_run ? ago(d.last_run.finished_at) + ' (' + esc(d.last_run.stage) + ')' : 'never'} · ${c.items} items in memory</div>
+      <div class="grid kpis">
+        <div class="card kpi"><div class="label">New items · 24h</div><div class="value">${c.items_24h}</div><div class="hint">${c.items} total</div></div>
+        <div class="card kpi"><div class="label">Insights · 24h</div><div class="value">${c.insights_24h}</div><div class="hint">${c.insights} total</div></div>
+        <div class="card kpi"><div class="label">Story clusters</div><div class="value">${c.clusters}</div><div class="hint">active trends tracked</div></div>
+        <div class="card kpi"><div class="label">Knowledge graph</div><div class="value">${c.entities}</div><div class="hint">${c.relations} relations</div></div>
+      </div>
+      <div class="grid two">
+        <div class="card">
+          <div class="row"><h2>Top signals</h2><span class="spacer"></span><a href="#/insights" class="small">All insights →</a></div>
+          ${d.top.map(insightRow).join('') || '<div class="empty">No insights in the last 24h — run the pipeline.</div>'}
+        </div>
+        <div class="grid" style="align-content:start">
+          <div class="card"><h2>Insights by category · 7 days</h2>
+            ${barChart(d.categories, 'category', 'n', x => `<b>${esc(x.category)}</b><br>${x.n} insights · avg impact ${x.avg_impact}`)}</div>
+          <div class="card"><div class="row"><h2>Rising stories · 7 days</h2><span class="spacer"></span><a href="#/trends" class="small">More →</a></div>
+            ${d.trends.map(t => `<div class="row small" style="padding:5px 0;border-top:1px solid var(--border)">
+                <span style="flex:1;min-width:0">${esc(t.label)}</span><span class="chip">+${t.growth}</span></div>`).join('') || '<div class="empty">—</div>'}</div>
+          <div class="card"><h2>Most-mentioned entities · 7 days</h2><div class="chips">
+            ${d.entities.map(e => `<span class="chip click" onclick="openEntity('${esc(e.name).replace(/'/g, "\\'")}')">${esc(e.name)} <b>${e.n}</b></span>`).join('') || '<span class="muted">—</span>'}</div></div>
+        </div>
+      </div>
+      ${d.brief ? `<div class="card md" style="margin-top:16px">${md(d.brief.replace(/\[\[[^|\]]+\|([^\]]+)\]\]/g, '$1'))}</div>` : ''}`;
+  },
+
+  async insights(params) {
+    const q = new URLSearchParams(params);
+    const d = await api('/api/insights?' + q);
+    const sel = (name, opts, cur) => `<select onchange="setParam('${name}', this.value)">${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(cur ?? '') ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`;
+    return `
+      <h1>Insights</h1><div class="sub">${d.insights.length} strategic analyses</div>
+      <div class="filters">
+        <input placeholder="Filter text…" value="${esc(params.q || '')}" onkeydown="if(event.key==='Enter')setParam('q', this.value)">
+        ${sel('days', [[1, 'Last 24h'], [7, 'Last 7 days'], [30, 'Last 30 days'], [365, 'Last year']], params.days || 30)}
+        ${sel('category', [['', 'All categories'], ...d.categories.map(c => [c, c])], params.category)}
+        ${sel('min_impact', [[0, 'Any impact'], [5, 'Impact ≥ 5'], [7, 'Impact ≥ 7'], [9, 'Impact ≥ 9']], params.min_impact || 0)}
+        ${sel('horizon', [['', 'Any horizon'], ['now', 'Now'], ['3-12 months', '3–12 months'], ['1-3 years', '1–3 years'], ['3+ years', '3+ years']], params.horizon)}
+      </div>
+      <div class="card">${d.insights.map(insightRow).join('') || '<div class="empty">Nothing matches</div>'}</div>`;
+  },
+
+  async trends(params) {
+    const days = params.days || 7;
+    const d = await api('/api/trends?days=' + days);
+    return `
+      <h1>Trends</h1><div class="sub">Story clusters ranked by growth in the last ${days} days. Sparklines fill in as daily snapshots accumulate.</div>
+      <div class="filters"><select onchange="setParam('days', this.value)">${[1, 7, 30].map(x => `<option ${x == days ? 'selected' : ''} value="${x}">Last ${x} day${x > 1 ? 's' : ''}</option>`).join('')}</select></div>
+      <div class="card" style="overflow-x:auto"><table>
+        <thead><tr><th>Story</th><th class="num">Items</th><th class="num">Sources</th><th class="num">Growth</th><th>History</th><th class="num">Score</th></tr></thead>
+        <tbody>${d.map(t => `
+          <tr class="click" onclick="${t.insight_id ? `openInsight(${t.insight_id})` : `openCluster(${t.id})`}">
+            <td><b>${esc(t.label)}</b><div class="small muted">${t.items.slice(0, 3).map(i => esc(i.source)).join(' · ')}${t.insight_id ? ' · <span style="color:var(--accent)">analyzed</span>' : ''}</div></td>
+            <td class="num">${t.item_count}</td><td class="num">${t.source_count}</td><td class="num">+${t.growth}</td>
+            <td>${sparkline(t.history)}</td><td class="num">${t.score.toFixed(1)}</td>
+          </tr>`).join('')}</tbody></table></div>`;
+  },
+
+  async graph(params) {
+    setTimeout(() => drawGraph(params.days || 30), 0);
+    return `
+      <div class="row"><div><h1>Knowledge graph</h1><div class="sub" style="margin-bottom:10px">Entities extracted from insights and how they relate. Click a node for details.</div></div>
+        <span class="spacer"></span>
+        <div class="filters" style="margin:0"><select onchange="setParam('days', this.value)">${[7, 30, 365].map(x => `<option ${x == (params.days || 30) ? 'selected' : ''} value="${x}">Seen in last ${x} days</option>`).join('')}</select></div></div>
+      <div class="legend" id="legend" style="margin-bottom:10px"></div>
+      <div id="graph"></div>`;
+  },
+
+  async ask(params) {
+    return `
+      <h1>Search &amp; Ask</h1><div class="sub">Search everything in memory (keyword + semantic), or ask Claude a question answered from memory with citations.</div>
+      <div class="card">
+        <textarea id="q" rows="3" style="width:100%;resize:vertical" placeholder="e.g. What opportunities are opening up around AI agents?">${esc(params.q || '')}</textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn primary" id="askBtn" onclick="doAsk()">Ask Claude</button>
+          <button class="btn" onclick="doSearch()">Search only</button>
+          <span class="muted small">Ask takes ~15–40s (runs claude -p)</span>
+        </div>
+      </div>
+      <div id="answer" style="margin-top:16px"></div>
+      <div id="results" style="margin-top:16px"></div>`;
+  },
+
+  async reports(params) {
+    const d = await api('/api/reports');
+    const kind = params.kind || 'briefs', name = params.name || (d[kind] || [])[0];
+    const r = name ? await api(`/api/reports/${kind}/${encodeURIComponent(name)}`) : null;
+    const list = (k, title) => `<h2 style="margin-top:14px">${title}</h2>` + (d[k].map(n =>
+      `<a href="#/reports?kind=${k}&name=${encodeURIComponent(n)}" class="chip click" style="margin:0 6px 6px 0;${k === kind && n === name ? 'border-color:var(--accent);color:var(--accent-ink)' : ''}">${esc(n)}</a>`).join('') || '<div class="muted small">None yet</div>');
+    return `
+      <h1>Reports</h1><div class="sub">Daily briefs and weekly strategic memos</div>
+      <div class="row" style="margin-bottom:12px"><button class="btn" onclick="startRun('brief')">Regenerate today's brief</button><button class="btn" onclick="startRun('weekly')">Generate weekly memo</button></div>
+      <div class="grid" style="grid-template-columns:minmax(0,220px) minmax(0,1fr)">
+        <div class="card">${list('briefs', 'Daily briefs')}${list('memos', 'Weekly memos')}</div>
+        <div class="card md">${r ? linkify(md(r.markdown.replace(/\[\[Insights\/(\d{4}-\d\d-\d\d)-(\d+)-[^|\]]*\|([^\]]+)\]\]/g, '[$3](#insight-$2)').replace(/\[\[[^|\]]+\|([^\]]+)\]\]/g, '$1'))) : '<div class="empty">No report yet</div>'}</div>
+      </div>`;
+  },
+
+  async sources() {
+    const [s, run] = await Promise.all([api('/api/sources'), api('/api/run')]);
+    return `
+      <h1>Sources &amp; runs</h1><div class="sub">Edit <code>config/sources.yaml</code> to add feeds.</div>
+      <div class="row" style="margin-bottom:14px">
+        ${['run', 'collect', 'enrich', 'analyze'].map(st => `<button class="btn ${st === 'run' ? 'primary' : ''}" onclick="startRun('${st}')">${st === 'run' ? 'Run full pipeline' : 'Run ' + st}</button>`).join('')}
+      </div>
+      <div class="card" style="margin-bottom:16px"><h2>Pipeline log</h2><div class="log" id="runlog">${esc(run.log.join('\n')) || 'No run started from the UI yet.'}</div></div>
+      <div class="card" style="overflow-x:auto"><table>
+        <thead><tr><th>Source</th><th>Type</th><th>Category</th><th class="num">Weight</th><th class="num">Items</th><th class="num">24h</th><th>Last fetched</th><th>Status</th></tr></thead>
+        <tbody>${s.map(x => `<tr><td><b>${esc(x.name)}</b></td><td>${esc(x.type)}</td><td>${esc(x.category)}</td><td class="num">${x.weight}</td>
+          <td class="num">${x.items}</td><td class="num">${x.items_24h || 0}</td><td class="small">${ago(x.last_fetched_at)}</td>
+          <td>${x.last_error ? `<span class="small" style="color:var(--bad)" data-tip="${esc(x.last_error)}">✕ error</span>` : '<span class="small" style="color:var(--good)">✓ ok</span>'}</td></tr>`).join('')}</tbody></table></div>`;
+  },
+};
+
+function linkify(html) {
+  return html.replace(/href="#insight-(\d+)"/g, 'href="javascript:openInsight($1)"');
+}
+
+// --------------------------------------------------------------- router
+function parseHash() {
+  const [path, qs] = location.hash.slice(2).split('?');
+  return {name: path || 'dashboard', params: Object.fromEntries(new URLSearchParams(qs || ''))};
+}
+function setParam(k, v) {
+  const {name, params} = parseHash();
+  if (v === '' || v == null) delete params[k]; else params[k] = v;
+  location.hash = '#/' + (name === 'dashboard' ? '' : name) + (Object.keys(params).length ? '?' + new URLSearchParams(params) : '');
+}
+async function route() {
+  const {name, params} = parseHash();
+  document.querySelectorAll('nav.side a').forEach(a => a.classList.toggle('active', a.dataset.route === name));
+  const v = views[name] || views.dashboard;
+  $('#view').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  try { $('#view').innerHTML = await v(params); if (params.open) openInsight(+params.open); }
+  catch (e) { $('#view').innerHTML = `<div class="card">Error: ${esc(e.message)}</div>`; }
+}
+addEventListener('hashchange', route);
+
+// --------------------------------------------------------------- drawer
+function openDrawer(html) { $('#drawer').innerHTML = `<button class="btn sm close" onclick="closeDrawer()">Close ✕</button>` + html; $('#drawer').classList.add('open'); $('#scrim').classList.add('open'); $('#drawer').scrollTop = 0; }
+function closeDrawer() { $('#drawer').classList.remove('open'); $('#scrim').classList.remove('open'); }
+addEventListener('keydown', e => { if (e.key === 'Escape') closeDrawer(); });
+const ul = xs => (xs && xs.length) ? '<ul>' + xs.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>' : '<span class="muted">—</span>';
+
+async function openInsight(id) {
+  openDrawer('<div class="empty"><span class="spinner"></span></div>');
+  const i = await api('/api/insights/' + id), a = i.data, m = a.ceo_moves || {}, vc = a.value_chain || {};
+  openDrawer(`
+    <div class="chips"><span class="chip">${esc(i.category)}</span><span class="chip">${esc((a.signal_type || '').replace(/_/g, ' '))}</span><span class="chip">${day(i.created_at)}</span></div>
+    <h1>${esc(i.headline)}</h1>
+    <div class="row">
+      <span class="chip" style="background:var(--accent-soft);color:var(--accent-ink);border-color:transparent">Impact ${i.impact}/10</span>
+      <span class="chip">Confidence ${pct(i.confidence)}</span><span class="chip">Horizon: ${esc(i.time_horizon)}</span>
+      <span class="spacer"></span>
+      <span class="small muted">Useful?</span>
+      <button class="btn sm" onclick="vote(${id}, 1)">👍</button><button class="btn sm" onclick="vote(${id}, -1)">👎</button>
+      <span class="small muted" id="fb">${i.feedback ? 'score ' + i.feedback : ''}</span>
+    </div>
+    <div class="sec"><h3>What happened</h3>${esc(a.summary)}</div>
+    <div class="sec"><h3>Why it matters</h3>${esc(a.why_it_matters)}</div>
+    <div class="sec"><h3>CEO moves</h3><div class="moves">
+      <div class="card"><h4>Now</h4>${ul(m.now)}</div>
+      <div class="card"><h4>Next 90 days</h4>${ul(m.next_90_days)}</div>
+      <div class="card"><h4>Next 12 months</h4>${ul(m.next_12_months)}</div></div></div>
+    <div class="sec"><h3>Opportunities</h3>${(a.opportunities || []).map(o => `<div class="opp"><b>${esc(o.title)} <span class="chip">${esc(o.effort)} effort</span></b><div>${esc(o.description)}</div><div class="small muted">Model: ${esc(o.business_model)}</div></div>`).join('') || '—'}</div>
+    <div class="sec"><h3>Threats</h3>${ul(a.threats)}</div>
+    <div class="sec wl"><div><h3>Winners</h3>${ul(vc.winners)}</div><div><h3>Losers</h3>${ul(vc.losers)}</div></div>
+    <div class="sec"><h3>Hype check</h3>${esc(a.hype_check)}</div>
+    <div class="sec"><h3>Leading indicators</h3>${ul(a.leading_indicators)}</div>
+    ${a.connection_to_past ? `<div class="sec"><h3>Connection to past signals</h3>${esc(a.connection_to_past)}</div>` : ''}
+    <div class="sec"><h3>Entities</h3><div class="chips">${i.entities.map(e => `<span class="chip click" onclick="openEntity('${esc(e.name).replace(/'/g, "\\'")}')">${esc(e.name)} <span class="muted">${esc(e.type || '')}</span></span>`).join('')}</div></div>
+    <div class="sec"><h3>Relations</h3>${ul((a.relations || []).map(r => `${r.source} → ${r.relation.replace(/_/g, ' ')} → ${r.target}`))}</div>
+    <div class="sec"><h3>Sources (${i.sources.length})</h3><ul>${i.sources.map(s => `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a> <span class="muted small">— ${esc(s.source)}</span></li>`).join('')}</ul></div>
+    ${i.note_path ? `<div class="sec"><a class="btn sm" href="obsidian://open?path=${encodeURIComponent(i.note_path)}">Open note in Obsidian</a> <span class="small muted">${esc(i.note_path.split('/vault/')[1] || '')}</span></div>` : ''}`);
+}
+
+async function vote(id, v) {
+  const r = await post(`/api/insights/${id}/feedback`, {vote: v});
+  $('#fb').textContent = 'score ' + r.feedback; toast('Feedback saved — scoring will adapt');
+}
+
+async function openEntity(name) {
+  openDrawer('<div class="empty"><span class="spinner"></span></div>');
+  try {
+    const e = await api('/api/entity?name=' + encodeURIComponent(name));
+    openDrawer(`
+      <div class="chips"><span class="chip">${esc(e.type || 'entity')}</span><span class="chip">${e.mention_count} mentions</span><span class="chip">first seen ${day(e.first_seen)}</span></div>
+      <h1>${esc(e.name)}</h1><div class="muted">${esc(e.description || '')}</div>
+      <div class="sec"><h3>Relations</h3>${ul(e.relations.map(r => `${r.src} → ${r.rel.replace(/_/g, ' ')} → ${r.dst}`))}</div>
+      <div class="sec"><h3>Insights</h3>${e.insights.map(i => `<div class="ins" onclick="openInsight(${i.id})" style="grid-template-columns:40px 1fr"><div class="impact"><div class="n" style="font-size:16px">${i.impact}</div></div><div><div class="ins-title">${esc(i.headline)}</div><div class="small muted">${day(i.created_at)}</div></div></div>`).join('') || '—'}</div>
+      ${e.neighborhood ? `<div class="sec"><h3>Neighborhood (2 hops)</h3><div class="chips">${e.neighborhood.map(n => `<span class="chip click" onclick="openEntity('${esc(n).replace(/'/g, "\\'")}')">${esc(n)}</span>`).join('')}</div></div>` : ''}`);
+  } catch { openDrawer('<div class="empty">Entity not found</div>'); }
+}
+
+async function openCluster(id) { toast('This story has not been analyzed yet'); }
+
+// --------------------------------------------------------------- graph
+const TYPES = ['company', 'technology', 'product', 'person', 'regulation', 'market', 'organization', 'other'];
+let network;
+async function drawGraph(days) {
+  const d = await api('/api/graph?days=' + days);
+  const linked = new Set(d.edges.flatMap(e => [e.src_id, e.dst_id]));
+  d.nodes = d.nodes.filter(n => linked.has(n.id));
+  const css = getComputedStyle(document.documentElement);
+  const col = t => css.getPropertyValue('--series-' + (TYPES.indexOf(TYPES.includes(t) ? t : 'other') + 1)).trim();
+  const text = css.getPropertyValue('--text-primary').trim(), surf = css.getPropertyValue('--surface-1').trim(), grid = css.getPropertyValue('--text-tertiary').trim();
+  const present = TYPES.filter(t => d.nodes.some(n => (TYPES.includes(n.type) ? n.type : 'other') === t));
+  $('#legend').innerHTML = present.map(t => `<span><i style="background:${col(t)}"></i>${t}</span>`).join('');
+  const nodes = new vis.DataSet(d.nodes.map(n => ({
+    id: n.id, label: n.name, value: n.mention_count,
+    title: `${n.name} (${n.type || 'entity'}) — ${n.mention_count} mentions`,
+    color: {background: col(n.type), border: surf, highlight: {background: col(n.type), border: text}},
+    font: {color: text, size: 13, face: 'Inter'}, borderWidth: 2,
+  })));
+  const edges = new vis.DataSet(d.edges.map((e, k) => ({
+    id: k, from: e.src_id, to: e.dst_id, label: e.rel.replace(/_/g, ' '), arrows: 'to',
+    color: {color: grid, opacity: .55}, font: {color: grid, size: 10, strokeWidth: 0, face: 'Inter'}, width: Math.min(1 + e.n, 4),
+  })));
+  if (network) network.destroy();
+  network = new vis.Network($('#graph'), {nodes, edges}, {
+    nodes: {shape: 'dot', scaling: {min: 10, max: 34, label: {enabled: true, min: 12, max: 18, drawThreshold: 6}}},
+    edges: {smooth: {type: 'continuous'}},
+    physics: {solver: 'forceAtlas2Based', forceAtlas2Based: {gravitationalConstant: -60, springLength: 90, centralGravity: 0.012}, stabilization: {iterations: 300}},
+    interaction: {hover: true, tooltipDelay: 120},
+  });
+  network.once('stabilizationIterationsDone', () => { network.setOptions({physics: false}); network.fit({animation: {duration: 400}}); });
+  network.on('click', p => { if (p.nodes.length) openEntity(nodes.get(p.nodes[0]).label); });
+}
+
+// --------------------------------------------------------------- search & ask
+function resultsHtml(res) {
+  return `<div class="card"><h2>Matching memory (${res.length})</h2>` + res.map(r => `
+    <div class="ins" style="grid-template-columns:70px 1fr" onclick="${r.type === 'insight' ? `openInsight(${r.id})` : `window.open('${esc(r.url || '')}','_blank')`}">
+      <div><span class="chip">${r.type}</span></div>
+      <div><div class="ins-title">${esc(r.title)}</div><div class="ins-why">${esc(r.summary)}</div><div class="small muted">${day(r.date)}</div></div>
+    </div>`).join('') + '</div>';
+}
+async function doSearch() {
+  const q = $('#q').value.trim(); if (!q) return;
+  $('#results').innerHTML = '<div class="empty"><span class="spinner"></span></div>';
+  $('#results').innerHTML = resultsHtml(await api('/api/search?q=' + encodeURIComponent(q)));
+}
+async function doAsk() {
+  const q = $('#q').value.trim(); if (!q) return;
+  const b = $('#askBtn'); b.disabled = true; b.innerHTML = '<span class="spinner"></span> Thinking…';
+  $('#answer').innerHTML = ''; $('#results').innerHTML = '';
+  try {
+    const r = await post('/api/ask', {question: q});
+    const html = md(r.answer).replace(/\[(insight|item):(\d+)\]/g, (_, t, id) =>
+      `<span class="cite" onclick="${t === 'insight' ? `openInsight(${id})` : `openItem(${id})`}">${t} ${id}</span>`);
+    $('#answer').innerHTML = `<div class="card md">${html}</div>`;
+    $('#results').innerHTML = resultsHtml(r.sources);
+  } catch (e) { $('#answer').innerHTML = `<div class="card">Error: ${esc(e.message)}</div>`; }
+  b.disabled = false; b.textContent = 'Ask Claude';
+}
+async function openItem(id) { const it = await api('/api/items/' + id); window.open(it.url, '_blank'); }
+document.addEventListener('keydown', e => { if (e.target.id === 'q' && e.key === 'Enter' && (e.metaKey || e.ctrlKey)) doAsk(); });
+
+// --------------------------------------------------------------- pipeline runs
+let pollTimer, wasRunning = false;
+async function startRun(stage) {
+  try { await post('/api/run', {stage}); toast(`Started: ${stage}`); pollRun(); }
+  catch (e) { toast(e.message.includes('409') || e.message.includes('already') ? 'A run is already in progress' : 'Failed: ' + e.message); }
+}
+async function pollRun() {
+  clearTimeout(pollTimer);
+  const r = await api('/api/run');
+  const btn = $('#runBtn');
+  btn.disabled = r.running; btn.innerHTML = r.running ? `<span class="spinner" style="border-top-color:#fff"></span> Running ${esc(r.stage)}…` : 'Run pipeline now';
+  $('#runInfo').textContent = r.running ? 'Started ' + r.started.slice(11) : (r.exit_code === 0 ? `Last UI run: ${r.stage} ✓` : r.exit_code ? `Last UI run failed (${r.exit_code})` : '');
+  const log = $('#runlog'); if (log && r.log.length) { log.textContent = r.log.join('\n'); log.scrollTop = log.scrollHeight; }
+  if (r.running) { wasRunning = true; pollTimer = setTimeout(pollRun, 2000); }
+  else if (wasRunning) { wasRunning = false; toast(r.exit_code === 0 ? `${r.stage} finished` : `${r.stage} failed`); if (!location.hash.startsWith('#/sources')) route(); }
+}
+
+route(); pollRun();
+</script>
+</body>
+</html>

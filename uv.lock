@@ -322,6 +322,24 @@ wheels = [
 ]
 
 [[package]]
+name = "fastapi"
+version = "0.165.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "annotated-doc" },
+    { name = "anyio" },
+    { name = "opentelemetry-api" },
+    { name = "pydantic" },
+    { name = "starlette" },
+    { name = "typing-extensions" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/27/f9/e7820ef181026fea100bde02d811445bf8e883362d7092b6928767147056/fastapi-0.165.0.tar.gz", hash = "sha256:dd94d4128319c1e1d50535ab023ab698f850a4d2822f0e181747b46f4ff3c0ab", size = 557984, upload-time = "2026-11-18T19:15:37.076Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/c1/3b74c030262a1b38b1fee180f80b4007bbc11c9ac12028cb18c7bcecaec9/fastapi-0.165.0-py3-none-any.whl", hash = "sha256:896f48462042bb4f162147eb8fac7e858753dc1f486765709baf105d70e4fc5b", size = 159475, upload-time = "2026-11-18T19:15:35.345Z" },
+]
+
+[[package]]
 name = "feedparser"
 version = "6.0.14"
 source = { registry = "https://pypi.org/simple" }
@@ -440,39 +458,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f5/08/8eea9d4b8302028f3abb2c0813953f7aec26d33b7a8960ed760e65ff29fa/idna-3.20.tar.gz", hash = "sha256:a7db850025b95ded1eae8a46181a1a6c56c92c96f0e2b005d9ff8dc0210cab44", size = 216463, upload-time = "2026-09-17T14:11:04.752Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/58/a2/bb081bab032533a855d44de1d56f8e8426114ff1ba5d1f07a438a0a654f8/idna-3.20-py3-none-any.whl", hash = "sha256:ab7ae7122974553370f0bdb919e1a960b2cd1bc1ef0276416d896db81c14582c", size = 69583, upload-time = "2026-09-17T14:11:03.168Z" },
-]
-
-[[package]]
-name = "intel"
-version = "0.1.0"
-source = { editable = "." }
-dependencies = [
-    { name = "feedparser" },
-    { name = "httpx" },
-    { name = "mcp", extra = ["cli"] },
-    { name = "networkx" },
-    { name = "numpy" },
-    { name = "pyyaml" },
-    { name = "rich" },
-    { name = "scikit-learn" },
-    { name = "sqlite-vec" },
-    { name = "trafilatura" },
-    { name = "typer" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "feedparser", specifier = ">=6.0.14" },
-    { name = "httpx", specifier = ">=0.29.0" },
-    { name = "mcp", extras = ["cli"], specifier = ">=2.3.0" },
-    { name = "networkx", specifier = ">=3.7" },
-    { name = "numpy", specifier = ">=2.5.5" },
-    { name = "pyyaml", specifier = ">=6.0.4" },
-    { name = "rich", specifier = ">=15.0.0" },
-    { name = "scikit-learn", specifier = ">=1.9.1" },
-    { name = "sqlite-vec", specifier = ">=0.1.9" },
-    { name = "trafilatura", specifier = ">=2.4.0" },
-    { name = "typer", specifier = ">=0.29.3" },
 ]
 
 [[package]]
@@ -598,6 +583,43 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/16/fc/cee2c45553c9a9bf77d8b0c391560c556d7ed756b1f0bb35eb5d48db09ea/markdown_it_py-4.3.0.tar.gz", hash = "sha256:91a58fa5b72c71a40cf7177250fd767480d7a2bb3ac426ccfb76fb90305fdaaa", size = 242701, upload-time = "2026-11-10T16:18:30.467Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c9/31/5f0ac2f1a1c67423c995c731a11cd4ad05d081a2be969d74f868bdb9cc70/markdown_it_py-4.3.0-py3-none-any.whl", hash = "sha256:7aa1511a46c39138de78d9eba92ce47e63124d8003fc98b3a351909e04239efa", size = 96951, upload-time = "2026-11-10T16:18:28.975Z" },
+]
+
+[[package]]
+name = "market-intel"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "fastapi" },
+    { name = "feedparser" },
+    { name = "httpx" },
+    { name = "mcp", extra = ["cli"] },
+    { name = "networkx" },
+    { name = "numpy" },
+    { name = "pyyaml" },
+    { name = "rich" },
+    { name = "scikit-learn" },
+    { name = "sqlite-vec" },
+    { name = "trafilatura" },
+    { name = "typer" },
+    { name = "uvicorn" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "fastapi", specifier = ">=0.165.0" },
+    { name = "feedparser", specifier = ">=6.0.14" },
+    { name = "httpx", specifier = ">=0.29.0" },
+    { name = "mcp", extras = ["cli"], specifier = ">=2.3.0" },
+    { name = "networkx", specifier = ">=3.7" },
+    { name = "numpy", specifier = ">=2.5.5" },
+    { name = "pyyaml", specifier = ">=6.0.4" },
+    { name = "rich", specifier = ">=15.0.0" },
+    { name = "scikit-learn", specifier = ">=1.9.1" },
+    { name = "sqlite-vec", specifier = ">=0.1.9" },
+    { name = "trafilatura", specifier = ">=2.4.0" },
+    { name = "typer", specifier = ">=0.29.3" },
+    { name = "uvicorn", specifier = ">=0.54.0" },
 ]
 
 [[package]]

@@ -1,4 +1,4 @@
-# Market Intelligence System
+# market-intel — Market Intelligence System
 
 Scans tech, business and research sources several times a day. It clusters items into stories and trends, analyzes the most important ones from a CEO strategy point of view (using `claude -p`), and saves everything as local, structured memory.
 
@@ -15,6 +15,12 @@ uv run intel run           # full pipeline: collect, enrich, analyze, daily brie
 uv run intel schedule install   # launchd: 07:00/13:00/19:00 daily, weekly memo Mon 07:45
 ```
 
+## Web UI
+```bash
+uv run intel ui            # opens http://127.0.0.1:8787
+```
+Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledge graph, Search & Ask (Claude answers with citations), Reports (briefs and memos), Sources & runs (source health, run the pipeline from the UI). Link straight to an insight with `#/insights?open=<id>`.
+
 ## Commands
 | Command | What it does |
 |---|---|
@@ -28,6 +34,7 @@ uv run intel schedule install   # launchd: 07:00/13:00/19:00 daily, weekly memo 
 | `intel feedback <id> up\|down` | Rate an insight; scoring of that story adjusts |
 | `intel stats` | Row counts and source health |
 | `intel schedule install\|uninstall\|status` | Manage the launchd jobs |
+| `intel ui` | Local web dashboard |
 | `intel mcp` | MCP server (stdio). Registered for this folder in `.mcp.json` |
 
 ## Where memory lives

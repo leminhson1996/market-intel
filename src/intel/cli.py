@@ -261,6 +261,14 @@ def mcp():
     run_mcp()
 
 
+@app.command()
+def ui(port: int = 8787, no_browser: bool = False):
+    """Open the local web dashboard (http://127.0.0.1:8787)."""
+    from .web.server import serve
+    console.print(f"Market Intel UI → http://127.0.0.1:{port}  (Ctrl+C to stop)")
+    serve(port=port, open_browser=not no_browser)
+
+
 # ---------------------------------------------------------------- scheduling (launchd)
 
 LAUNCH_AGENTS = Path.home() / "Library/LaunchAgents"

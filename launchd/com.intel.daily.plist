@@ -16,14 +16,14 @@
 		<string>/opt/homebrew/bin/uv</string>
 		<string>run</string>
 		<string>--project</string>
-		<string>/Users/leminhson/freelance/market-analytics</string>
+		<string>/Users/leminhson/freelance/market-intel</string>
 		<string>intel</string>
 		<string>run</string>
 	</array>
 	<key>StandardErrorPath</key>
-	<string>/Users/leminhson/freelance/market-analytics/logs/com.intel.daily.err.log</string>
+	<string>/Users/leminhson/freelance/market-intel/logs/com.intel.daily.err.log</string>
 	<key>StandardOutPath</key>
-	<string>/Users/leminhson/freelance/market-analytics/logs/com.intel.daily.out.log</string>
+	<string>/Users/leminhson/freelance/market-intel/logs/com.intel.daily.out.log</string>
 	<key>StartCalendarInterval</key>
 	<array>
 		<dict>
@@ -46,6 +46,6 @@
 		</dict>
 	</array>
 	<key>WorkingDirectory</key>
-	<string>/Users/leminhson/freelance/market-analytics</string>
+	<string>/Users/leminhson/freelance/market-intel</string>
 </dict>
 </plist>

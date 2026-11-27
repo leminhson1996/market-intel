@@ -1,13 +1,14 @@
 [project]
-name = "intel"
+name = "market-intel"
 version = "0.1.0"
-description = "Add your description here"
+description = "Market intelligence: scan signals, analyze CEO strategy, keep local memory"
 readme = "README.md"
 authors = [
     { name = "sonlm", email = "son@olli-ai.com" }
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "fastapi>=0.165.0",
     "feedparser>=6.0.14",
     "httpx>=0.29.0",
     "mcp[cli]>=2.3.0",
@@ -19,6 +20,7 @@ dependencies = [
     "sqlite-vec>=0.1.9",
     "trafilatura>=2.4.0",
     "typer>=0.29.3",
+    "uvicorn>=0.54.0",
 ]
 
 [project.scripts]
@@ -27,3 +29,6 @@ intel = "intel.cli:app"
 [build-system]
 requires = ["uv_build>=0.11.7,<0.12.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "intel"
