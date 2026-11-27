@@ -76,5 +76,19 @@ def latest_report(kind: str = "brief") -> str:
     return files[-1].read_text() if files else "No report yet."
 
 
+@server.tool()
+def list_predictions(limit: int = 20) -> list[dict]:
+    """Past on-demand forecasts (id, horizon, model, title, confidence, status)."""
+    from .predict import list_all
+    return list_all(limit)
+
+
+@server.tool()
+def get_prediction(prediction_id: int) -> dict:
+    """Full forecast: outlook, probabilistic predictions with signposts, scenarios, wildcards, CEO playbook."""
+    from .predict import get
+    return get(prediction_id) or {"error": "not found"}
+
+
 def main() -> None:
     server.run("stdio")

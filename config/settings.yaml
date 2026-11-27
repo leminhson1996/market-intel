@@ -39,3 +39,13 @@ git:
   auto_push: true
   remote: origin
   paths: [vault]          # only these paths are committed; code changes are never auto-committed
+
+# Predict: on-demand forecasts (runs only when you click Predict / run `intel predict`)
+predict:
+  default_model: claude-sonnet-5-5
+  timeout_sec: 900
+  models:                   # shown in the model picker; ids are passed to `claude -p --model`
+    - {id: claude-opus-5-5, label: "Opus 5.5", note: "deepest reasoning, slowest"}
+    - {id: claude-sonnet-5-5, label: "Sonnet 5.5", note: "balanced"}
+    - {id: claude-fable-5-2, label: "Fable 5.2", note: "alternative perspective"}
+    - {id: claude-haiku-5-5, label: "Haiku 5.5", note: "fastest, cheapest"}

@@ -39,5 +39,5 @@ def company_profile() -> dict:
 def ensure_dirs() -> None:
     for d in (DATA_DIR, RAW_DIR, LOG_DIR, VAULT_DIR):
         d.mkdir(parents=True, exist_ok=True)
-    for sub in ("Briefs", "Insights", "Entities", "Trends", "Memos"):
+    for sub in ("Briefs", "Insights", "Entities", "Trends", "Memos", "Predictions"):
         (VAULT_DIR / sub).mkdir(parents=True, exist_ok=True)

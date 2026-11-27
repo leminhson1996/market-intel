@@ -269,6 +269,30 @@ def prune():
 
 
 @app.command()
+def predict(
+    topic: str = typer.Argument("", help="Focus topic (blank = overall landscape)"),
+    horizon: str = typer.Option("1 year", "--horizon", "-h", help="e.g. '3 months', '1 year', '5 years'"),
+    model: str = typer.Option("", "--model", "-m", help="claude-opus-5-5 | claude-sonnet-5-5 | claude-fable-5-2 | claude-haiku-5-5"),
+    vi: bool = typer.Option(False, "--vi", help="Write the forecast in Vietnamese"),
+):
+    """Forecast the future over a horizon, grounded in memory (runs only on demand)."""
+    from . import predict as P
+    db.init_db()
+    model = model or settings().get("predict", {}).get("default_model", "claude-sonnet-5-5")
+    console.print(f"Forecasting [bold]{topic or 'overall landscape'}[/] over {horizon} with {model}…")
+    pid = P.create(topic, horizon, model, "vi" if vi else "en", background=False)
+    p = P.get(pid)
+    if p["status"] != "done":
+        console.print(f"[red]failed:[/] {p['error']}")
+        raise typer.Exit(1)
+    a = p["data"]
+    console.print(f"\n[bold]{escape(a['title'])}[/]  (confidence {a['overall_confidence']:.0%})\n{escape(a['executive_outlook'])}\n")
+    for x in a["predictions"]:
+        console.print(escape(f"  {x['probability']:>4.0%}  {x['statement']}  [{x['by_when']}]"))
+    console.print(f"\nnote: {p['note_path']}")
+
+
+@app.command()
 def reembed():
     """Re-embed all items/insights after changing the embedding model in settings.yaml."""
     t = time.time()

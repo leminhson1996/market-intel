@@ -19,7 +19,7 @@ uv run intel schedule install   # launchd: 07:00/13:00/19:00 daily, weekly memo 
 ```bash
 uv run intel ui            # opens http://127.0.0.1:8787
 ```
-Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledge graph, Search & Ask (Claude answers with citations), Reports (briefs and memos), Sources & runs (source health, run the pipeline from the UI). Link straight to an insight with `#/insights?open=<id>`.
+Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Predict, Knowledge graph, Search & Ask (Claude answers with citations), Reports (briefs and memos), Sources & runs (source health, run the pipeline from the UI). Link straight to an insight with `#/insights?open=<id>`.
 
 ## Commands
 | Command | What it does |
@@ -36,6 +36,7 @@ Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledg
 | `intel schedule install\|uninstall\|status` | Manage the launchd jobs |
 | `intel ui` | Local web dashboard |
 | `intel gitsync` | Commit and push `vault/` now (also runs automatically after `run`/`weekly`; see `git:` in settings.yaml) |
+| `intel predict "topic" -h "1 year" -m claude-opus-5-5 [--vi]` | On-demand forecast grounded in memory |
 | `intel reembed` | Rebuild all vectors after changing `embedding.model` in settings.yaml |
 | `intel mcp` | MCP server (stdio). Registered for this folder in `.mcp.json` |
 
@@ -47,6 +48,21 @@ Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledg
 | Knowledge graph | `entities` + `relations` tables; `vault/Entities/*.md` | Companies, technologies, people, regulations, and how they relate |
 | Markdown vault | `vault/` (open it as an Obsidian vault) | `Insights/`, `Briefs/`, `Memos/`, `Entities/`, all wiki-linked |
 | Raw archive | `data/raw/YYYY-MM-DD.jsonl` | Every new item as collected (pruned after `retention.raw_days`) |
+
+## Predict
+On-demand forecasting that runs only when you click **Predict** in the UI or run `intel predict`. You choose:
+- an optional focus topic
+- a horizon (1 month to 5 years, or a custom one)
+- the model (Opus 5.5, Sonnet 5.5, Fable 5.2 or Haiku 5.5; the list is in `predict.models` in settings.yaml)
+- the language (English or Vietnamese)
+
+The forecast draws on the most relevant insights, trend momentum, the most-mentioned entities and earlier forecasts. It contains:
+- falsifiable predictions with calibrated probabilities, signposts, invalidators and links to the evidence insights
+- 3–4 scenarios
+- wildcards
+- a CEO playbook
+
+Forecasts are stored in the `predictions` table and in `vault/Predictions/`, and are auto-committed.
 
 ## Languages
 Search and Ask work in Vietnamese as well as English. `bge-m3` puts both languages in the same vector space, so a Vietnamese question finds English articles. `ask` replies in the language of the question.

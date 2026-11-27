@@ -162,7 +162,38 @@ tr.click:hover td { background: var(--surface-2); }
 .spark path { fill: none; stroke: var(--series-1); stroke-width: 2; }
 .toast { position: fixed; bottom: 20px; right: 20px; background: var(--text-primary); color: var(--surface-1); padding: 10px 14px; border-radius: 8px; z-index: 60; display: none; }
 
+/* predict */
+.models { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 8px; }
+.model-opt { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; cursor: pointer; background: var(--surface-1); text-align: left; }
+.model-opt b { display: block; }
+.model-opt.sel { border-color: var(--accent); background: var(--accent-soft); }
+.model-opt.sel b { color: var(--accent-ink); }
+.form-grid { display: grid; grid-template-columns: minmax(0,1fr) 220px; gap: 14px; }
+.lbl { font-size: 12px; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; margin: 0 0 6px; display: block; }
+.seg { display: inline-flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+.seg button { border: 0; background: var(--surface-1); padding: 6px 14px; cursor: pointer; }
+.seg button.sel { background: var(--accent); color: #fff; }
+.pred { padding: 14px 0; border-top: 1px solid var(--border); }
+.pred:first-child { border-top: 0; padding-top: 0; }
+.prob { display: grid; grid-template-columns: 46px 1fr; gap: 12px; align-items: start; }
+.prob .pct { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.pbar { height: 6px; background: var(--grid); border-radius: 3px; margin-top: 4px; overflow: hidden; }
+.pbar i { display: block; height: 100%; background: var(--series-1); border-radius: 0 3px 3px 0; }
+.scen { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+.scen .card { box-shadow: none; background: var(--surface-2); }
+.plist .row-item { display: flex; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--border); cursor: pointer; }
+.plist .row-item:first-child { border-top: 0; }
+.plist .row-item:hover .t { color: var(--accent); }
+.plist .row-item.cur .t { color: var(--accent-ink); }
+.status { font-size: 11px; font-weight: 600; padding: 1px 8px; border-radius: 999px; }
+.status.done { background: var(--accent-soft); color: var(--accent-ink); }
+.status.running { background: var(--surface-2); color: var(--text-secondary); }
+.status.failed { color: var(--bad); border: 1px solid var(--bad); }
+details summary { cursor: pointer; color: var(--text-secondary); font-size: 13px; }
+
 @media (max-width: 900px) {
+  .models { grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .form-grid { grid-template-columns: 1fr; }
   .app { grid-template-columns: 1fr; }
   nav.side { position: static; height: auto; flex-direction: row; overflow-x: auto; padding: 10px 16px; }
   .brand, .side-foot { display: none; }
@@ -180,6 +211,7 @@ tr.click:hover td { background: var(--surface-2); }
     <a href="#/" data-route="dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>Dashboard</a>
     <a href="#/insights" data-route="insights"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg>Insights</a>
     <a href="#/trends" data-route="trends"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg>Trends</a>
+    <a href="#/predict" data-route="predict"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.5"/></svg>Predict</a>
     <a href="#/graph" data-route="graph"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18" r="2.5"/><path d="M7 7.5l3.5 8.5M17 7.5l-3.5 8.5M7.5 6h9"/></svg>Knowledge graph</a>
     <a href="#/ask" data-route="ask"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>Search &amp; Ask</a>
     <a href="#/reports" data-route="reports"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>Reports</a>
@@ -325,6 +357,45 @@ const views = {
           </tr>`).join('')}</tbody></table></div>`;
   },
 
+  async predict(params) {
+    const [opt, list] = await Promise.all([api('/api/predict/options'), api('/api/predictions')]);
+    window._pm = window._pm || opt.default_model; window._pl = window._pl || 'en';
+    const cur = params.id ? await api('/api/predictions/' + params.id) : null;
+    clearTimeout(window._ppoll);
+    if (list.some(p => p.status === 'running')) window._ppoll = setTimeout(() => { if (location.hash.startsWith('#/predict')) refreshPredict(); }, 4000);
+    return `
+      <h1>Predict</h1>
+      <div class="sub">Forecast the future over a chosen horizon, grounded in everything in memory. Runs only when you click <b>Predict</b>.</div>
+      <div class="card" style="margin-bottom:16px">
+        <div class="form-grid">
+          <div><label class="lbl">Focus topic (optional)</label>
+            <textarea id="ptopic" rows="2" style="width:100%;resize:vertical" placeholder="e.g. AI agents in enterprise software · GPU supply · Thị trường AI tại Việt Nam — leave blank for the overall landscape"></textarea></div>
+          <div><label class="lbl">Horizon</label>
+            <select id="phorizon" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:var(--surface-1)" onchange="document.getElementById('pcustom').style.display=this.value==='custom'?'block':'none'">
+              ${opt.horizons.map(h => `<option ${h === '1 year' ? 'selected' : ''}>${h}</option>`).join('')}<option value="custom">Custom…</option></select>
+            <input id="pcustom" placeholder="e.g. 18 months" style="display:none;margin-top:6px;width:100%;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface-1)"></div>
+        </div>
+        <label class="lbl" style="margin-top:14px">Model</label>
+        <div class="models">${opt.models.map(m => `<button class="model-opt ${m.id === window._pm ? 'sel' : ''}" onclick="pickModel('${esc(m.id)}', this)"><b>${esc(m.label)}</b><span class="small muted">${esc(m.note || m.id)}</span></button>`).join('')}</div>
+        <div class="row" style="margin-top:14px">
+          <span class="lbl" style="margin:0">Language</span>
+          <div class="seg"><button class="${window._pl === 'en' ? 'sel' : ''}" onclick="pickLang('en', this)">English</button><button class="${window._pl === 'vi' ? 'sel' : ''}" onclick="pickLang('vi', this)">Tiếng Việt</button></div>
+          <span class="spacer"></span>
+          <span class="small muted">Takes ~1–5 min depending on model</span>
+          <button class="btn primary" id="predictBtn" onclick="doPredict()">Predict</button>
+        </div>
+      </div>
+      <div class="grid" style="grid-template-columns:minmax(0,300px) minmax(0,1fr);align-items:start">
+        <div class="card plist"><h2>Forecasts</h2>${list.map(p => `
+          <div class="row-item ${cur && cur.id === p.id ? 'cur' : ''}" onclick="location.hash='#/predict?id=${p.id}'">
+            <div style="flex:1;min-width:0"><div class="t" style="font-weight:600">${esc(p.title || p.topic || 'Overall landscape')}</div>
+              <div class="small muted">${esc(p.horizon)} · ${esc(modelLabel(opt, p.model))} · ${day(p.created_at)}</div></div>
+            <span class="status ${p.status}">${p.status === 'running' ? '<span class="spinner" style="width:10px;height:10px;border-width:2px"></span> running' : p.status}</span>
+          </div>`).join('') || '<div class="empty">No forecasts yet</div>'}</div>
+        <div>${cur ? predictionHtml(cur, opt) : '<div class="card empty">Pick a forecast or create a new one.</div>'}</div>
+      </div>`;
+  },
+
   async graph(params) {
     setTimeout(() => drawGraph(params.days || 30), 0);
     return `
@@ -462,6 +533,64 @@ async function openEntity(name) {
 }
 
 async function openCluster(id) { toast('This story has not been analyzed yet'); }
+
+// --------------------------------------------------------------- predict
+const modelLabel = (opt, id) => (opt.models.find(m => m.id === id) || {label: id}).label;
+function pickModel(id, el) { window._pm = id; document.querySelectorAll('.model-opt').forEach(b => b.classList.remove('sel')); el.classList.add('sel'); }
+function pickLang(l, el) { window._pl = l; el.parentNode.querySelectorAll('button').forEach(b => b.classList.remove('sel')); el.classList.add('sel'); }
+async function refreshPredict() { const y = scrollY; await route(); scrollTo(0, y); }
+async function doPredict() {
+  const h = $('#phorizon').value === 'custom' ? $('#pcustom').value.trim() : $('#phorizon').value;
+  if (!h) { toast('Enter a horizon'); return; }
+  const b = $('#predictBtn'); b.disabled = true;
+  try {
+    const p = await post('/api/predictions', {topic: $('#ptopic').value.trim(), horizon: h, model: window._pm, language: window._pl});
+    toast('Forecast started'); location.hash = '#/predict?id=' + p.id;
+  } catch (e) { toast('Failed: ' + e.message); b.disabled = false; }
+}
+const evid = ids => (ids || []).map(i => `<span class="cite" onclick="openInsight(${i})">insight ${i}</span>`).join(' ');
+function predictionHtml(p, opt) {
+  if (p.status === 'running') return `<div class="card"><div class="row"><span class="spinner"></span><b>Forecasting ${esc(p.topic || 'overall landscape')} over ${esc(p.horizon)} with ${esc(modelLabel(opt, p.model))}…</b></div>
+    <div class="muted small" style="margin-top:8px">Started ${ago(p.created_at)}. This page refreshes automatically; you can leave and come back.</div></div>`;
+  if (p.status === 'failed') return `<div class="card"><b style="color:var(--bad)">Forecast failed</b><div class="log" style="margin-top:8px">${esc(p.error)}</div></div>`;
+  const a = p.data, pb = a.ceo_playbook;
+  const preds = [...a.predictions].sort((x, y) => y.probability - x.probability);
+  return `
+    <div class="card">
+      <div class="chips"><span class="chip">${esc(p.horizon)} · to ~${esc(p.target_date)}</span><span class="chip">${esc(modelLabel(opt, p.model))}</span><span class="chip">${day(p.created_at)}</span>${p.topic ? `<span class="chip">${esc(p.topic)}</span>` : ''}</div>
+      <h1 style="margin-top:10px">${esc(a.title)}</h1>
+      <div class="row"><span class="chip" style="background:var(--accent-soft);color:var(--accent-ink);border-color:transparent">Overall confidence ${pct(a.overall_confidence)}</span>
+        <span class="small muted">Grounded in ${p.context_ids.length} insights</span></div>
+      <div class="sec"><h3>Outlook</h3>${esc(a.executive_outlook)}</div>
+      <div class="sec"><h3>Baseline assumptions</h3>${ul(a.baseline_assumptions)}</div>
+    </div>
+    <div class="card" style="margin-top:16px"><h2>Predictions</h2>${preds.map(x => `
+      <div class="pred"><div class="prob">
+        <div><div class="pct">${pct(x.probability)}</div><div class="pbar" data-tip="Probability ${pct(x.probability)}"><i style="width:${x.probability * 100}%"></i></div></div>
+        <div><div style="font-weight:600">${esc(x.statement)}</div>
+          <div class="chips" style="margin:6px 0"><span class="chip">${esc(x.by_when)}</span><span class="chip">${esc(x.domain)}</span></div>
+          <div class="small">${esc(x.rationale)}</div>
+          <div class="small" style="margin-top:6px"><b>Business implication:</b> ${esc(x.business_implication)}</div>
+          <details style="margin-top:6px"><summary>Signposts &amp; invalidators</summary>
+            <div class="wl small" style="margin-top:6px"><div><b>Confirms if</b>${ul(x.signposts)}</div><div><b>Falsified if</b>${ul(x.invalidators)}</div></div></details>
+          ${x.evidence_insight_ids.length ? `<div style="margin-top:6px">${evid(x.evidence_insight_ids)}</div>` : ''}
+        </div></div></div>`).join('')}</div>
+    <div class="card" style="margin-top:16px"><h2>Scenarios</h2><div class="scen">${a.scenarios.map(sc => `
+      <div class="card"><div class="row"><b>${esc(sc.name)}</b><span class="spacer"></span><span class="chip">${pct(sc.probability)}</span></div>
+        <div class="pbar" style="margin:8px 0"><i style="width:${sc.probability * 100}%"></i></div>
+        <div class="small">${esc(sc.narrative)}</div>
+        <div class="small" style="margin-top:8px"><b>Triggers</b>${ul(sc.triggers)}</div>
+        <div class="small"><b>Winners:</b> ${esc(sc.winners.join(', '))}<br><b>Losers:</b> ${esc(sc.losers.join(', '))}</div>
+        <div class="small" style="margin-top:6px"><b>CEO response:</b> ${esc(sc.ceo_response)}</div></div>`).join('')}</div></div>
+    <div class="card" style="margin-top:16px"><h2>CEO playbook</h2><div class="moves" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      <div class="card"><h4>No-regret moves</h4>${ul(pb.no_regret_moves)}</div><div class="card"><h4>Bets to place</h4>${ul(pb.bets_to_place)}</div>
+      <div class="card"><h4>Hedges</h4>${ul(pb.hedges)}</div><div class="card"><h4>Decision points</h4>${ul(pb.decision_points)}</div></div></div>
+    <div class="grid two" style="margin-top:16px">
+      <div class="card"><h2>Wildcards</h2>${ul(a.wildcards.map(w => `${w.event} (${pct(w.probability)}) — ${w.impact}`))}</div>
+      <div class="card"><h2>Key uncertainties</h2>${ul(a.key_uncertainties)}<h2 style="margin-top:14px">Evidence gaps</h2>${ul(a.evidence_gaps)}</div>
+    </div>
+    ${p.note_path ? `<div style="margin-top:12px"><a class="btn sm" href="obsidian://open?path=${encodeURIComponent(p.note_path)}">Open in Obsidian</a></div>` : ''}`;
+}
 
 // --------------------------------------------------------------- graph
 const TYPES = ['company', 'technology', 'product', 'person', 'regulation', 'market', 'organization', 'other'];

@@ -222,6 +222,51 @@ def sources_health():
            FROM sources s LEFT JOIN items i ON i.source_id=s.id GROUP BY s.id ORDER BY items DESC""")
 
 
+# ---------------------------------------------------------------- predictions
+
+class PredictReq(BaseModel):
+    topic: str = ""
+    horizon: str = "1 year"
+    model: str = ""
+    language: str = "en"
+
+
+@app.get("/api/predict/options")
+def predict_options():
+    from .. import predict
+    from ..config import settings
+    return {"models": predict.models(), "horizons": predict.HORIZONS,
+            "default_model": settings().get("predict", {}).get("default_model", "claude-sonnet-5-5")}
+
+
+@app.get("/api/predictions")
+def predictions_list():
+    from .. import predict
+    return predict.list_all()
+
+
+@app.post("/api/predictions")
+def predictions_create(req: PredictReq):
+    from .. import predict
+    if not req.horizon.strip():
+        raise HTTPException(400, "horizon required")
+    try:
+        pid = predict.create(req.topic, req.horizon.strip(), req.model or predict_options()["default_model"],
+                             "vi" if req.language == "vi" else "en")
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    return predict.get(pid)
+
+
+@app.get("/api/predictions/{pid}")
+def predictions_get(pid: int):
+    from .. import predict
+    p = predict.get(pid)
+    if not p:
+        raise HTTPException(404)
+    return p
+
+
 # ---------------------------------------------------------------- pipeline runner
 
 _run = {"proc": None, "log": deque(maxlen=200), "started": None, "cmd": None, "code": None}
@@ -262,6 +307,8 @@ def run_status():
 
 def serve(host: str = "127.0.0.1", port: int = 8787, open_browser: bool = True) -> None:
     import uvicorn
+    from ..predict import mark_stale_running
+    mark_stale_running()
     if open_browser:
         threading.Timer(1.2, lambda: subprocess.run(["open", f"http://{host}:{port}"], check=False)).start()
     uvicorn.run(app, host=host, port=port, log_level="warning")
