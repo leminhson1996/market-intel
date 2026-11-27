@@ -35,6 +35,7 @@ Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledg
 | `intel stats` | Row counts and source health |
 | `intel schedule install\|uninstall\|status` | Manage the launchd jobs |
 | `intel ui` | Local web dashboard |
+| `intel gitsync` | Commit and push `vault/` now (also runs automatically after `run`/`weekly`; see `git:` in settings.yaml) |
 | `intel mcp` | MCP server (stdio). Registered for this folder in `.mcp.json` |
 
 ## Where memory lives
