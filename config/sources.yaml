@@ -1,0 +1,24 @@
+# type: rss | hackernews | reddit | github | arxiv
+# weight: source trust/importance multiplier (0.5 - 2.0)
+sources:
+  - {name: TechCrunch, type: rss, url: "https://techcrunch.com/feed/", weight: 1.2, category: tech-news}
+  - {name: The Verge, type: rss, url: "https://www.theverge.com/rss/index.xml", weight: 1.0, category: tech-news}
+  - {name: Ars Technica, type: rss, url: "https://feeds.arstechnica.com/arstechnica/index", weight: 1.0, category: tech-news}
+  - {name: MIT Technology Review, type: rss, url: "https://www.technologyreview.com/feed/", weight: 1.3, category: tech-news}
+  - {name: VentureBeat, type: rss, url: "https://venturebeat.com/feed/", weight: 1.0, category: tech-news}
+  - {name: Wired, type: rss, url: "https://www.wired.com/feed/rss", weight: 1.0, category: tech-news}
+  - {name: Engadget, type: rss, url: "https://www.engadget.com/rss.xml", weight: 0.8, category: tech-news}
+  - {name: Crunchbase News, type: rss, url: "https://news.crunchbase.com/feed/", weight: 1.3, category: funding}
+  - {name: Stratechery, type: rss, url: "https://stratechery.com/feed/", weight: 1.5, category: strategy}
+  - {name: a16z, type: rss, url: "https://a16z.substack.com/feed", weight: 1.2, category: strategy}
+  - {name: CNBC Tech, type: rss, url: "https://www.cnbc.com/id/19854910/device/rss/rss.html", weight: 1.1, category: business}
+  - {name: BBC Business, type: rss, url: "https://feeds.bbci.co.uk/news/business/rss.xml", weight: 1.0, category: business}
+  - {name: OpenAI News, type: rss, url: "https://openai.com/news/rss.xml", weight: 1.3, category: ai}
+  - {name: Google AI Blog, type: rss, url: "https://blog.google/technology/ai/rss/", weight: 1.2, category: ai}
+  - {name: Hugging Face Blog, type: rss, url: "https://huggingface.co/blog/feed.xml", weight: 1.0, category: ai}
+  - {name: Hacker News, type: hackernews, url: "https://hacker-news.firebaseio.com/v0", limit: 60, min_score: 80, weight: 1.2, category: dev}
+  - {name: r/technology, type: rss, url: "https://old.reddit.com/r/technology/top/.rss?t=day", weight: 0.7, category: community}
+  - {name: r/startups, type: rss, url: "https://old.reddit.com/r/startups/top/.rss?t=day", weight: 0.7, category: community}
+  - {name: r/MachineLearning, type: rss, url: "https://old.reddit.com/r/MachineLearning/top/.rss?t=day", weight: 0.8, category: ai}
+  - {name: GitHub rising repos, type: github, url: "https://api.github.com/search/repositories", limit: 30, weight: 0.9, category: dev}
+  - {name: arXiv AI, type: arxiv, url: "http://export.arxiv.org/api/query?search_query=cat:cs.AI+OR+cat:cs.CL+OR+cat:cs.LG&sortBy=submittedDate&sortOrder=descending&max_results=40", weight: 0.6, category: research}

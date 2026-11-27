@@ -1,0 +1,29 @@
+[project]
+name = "intel"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "sonlm", email = "son@olli-ai.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "feedparser>=6.0.14",
+    "httpx>=0.29.0",
+    "mcp[cli]>=2.3.0",
+    "networkx>=3.7",
+    "numpy>=2.5.5",
+    "pyyaml>=6.0.4",
+    "rich>=15.0.0",
+    "scikit-learn>=1.9.1",
+    "sqlite-vec>=0.1.9",
+    "trafilatura>=2.4.0",
+    "typer>=0.29.3",
+]
+
+[project.scripts]
+intel = "intel.cli:app"
+
+[build-system]
+requires = ["uv_build>=0.11.7,<0.12.0"]
+build-backend = "uv_build"

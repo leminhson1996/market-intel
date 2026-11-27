@@ -1,0 +1,34 @@
+# Runtime settings
+llm:
+  backend: claude_cli        # claude -p (uses your Claude Code subscription)
+  model: sonnet              # alias passed to `claude -p --model`
+  timeout_sec: 240
+  parallel: 3                # concurrent claude -p calls
+
+embedding:
+  ollama_url: http://localhost:11434
+  model: nomic-embed-text
+  dim: 768
+
+pipeline:
+  lookback_days: 2           # only items published within this window are processed
+  cluster_threshold: 0.78    # cosine similarity to join an existing cluster
+  cluster_active_days: 14    # clusters older than this stop absorbing items
+  analyze_top_n: 15          # how many clusters get CEO analysis per run
+  reanalyze_growth: 3        # re-analyze a cluster if it gained this many new items
+  fetch_fulltext: false      # download article bodies (slower, richer)
+
+retention:
+  raw_days: 90
+
+# Items whose title matches any of these (case-insensitive regex) are dropped at collection.
+noise_patterns:
+  - "promo codes?"
+  - "coupons?"
+  - "\\d+% off"
+  - "best .*deals"
+  - "black friday|cyber monday"
+  - "^tell hn: happy"
+  - "discount codes?"
+  - "^(the )?best .* (to buy|of 20\\d\\d)"
+  - "horoscope|wordle|crossword"

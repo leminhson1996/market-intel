@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "market-intel": {
+      "command": "/opt/homebrew/bin/uv",
+      "args": ["run", "--project", "/Users/leminhson/freelance/market-analytics", "intel", "mcp"]
+    }
+  }
+}

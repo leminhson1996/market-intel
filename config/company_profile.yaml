@@ -1,0 +1,11 @@
+# Strategy lens. Kept general for now - fill in to tailor analysis to a specific business.
+name: "Generic technology company"
+description: >
+  A growth-stage technology company. Analyze from the perspective of any
+  tech-savvy CEO looking for new products, markets, partnerships, efficiency
+  gains, and threats to defend against.
+industries: []          # e.g. ["fintech", "edtech"]
+markets: []             # e.g. ["Vietnam", "Southeast Asia"]
+strengths: []           # e.g. ["AI/ML engineering", "B2B sales"]
+goals: []               # e.g. ["enter US market", "launch AI product line"]
+watch_topics: []        # extra keywords that boost relevance
