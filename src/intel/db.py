@@ -126,6 +126,8 @@ CREATE TABLE IF NOT EXISTS trend_snapshots (
     PRIMARY KEY (cluster_id, snapshot_date)
 );
 
+CREATE TABLE IF NOT EXISTS meta (key TEXT PRIMARY KEY, value TEXT);
+
 CREATE TABLE IF NOT EXISTS runs (
     id INTEGER PRIMARY KEY,
     started_at TEXT DEFAULT (datetime('now')),
@@ -148,10 +150,25 @@ def connect() -> sqlite3.Connection:
     return conn
 
 
+class EmbeddingMismatch(RuntimeError):
+    pass
+
+
 def init_db() -> None:
-    dim = settings()["embedding"]["dim"]
+    emb = settings()["embedding"]
+    dim = emb["dim"]
     with connect() as conn:
         conn.executescript(SCHEMA)
+        stored = dict(conn.execute("SELECT key, value FROM meta WHERE key IN ('embed_model','embed_dim')").fetchall())
+        has_vec = conn.execute("SELECT 1 FROM sqlite_master WHERE name='item_vec'").fetchone()
+        if not stored and has_vec:
+            stored = {"embed_model": "nomic-embed-text", "embed_dim": "768"}  # databases created before meta existed
+        if stored and (stored.get("embed_model") != emb["model"] or int(stored.get("embed_dim", 0)) != dim):
+            raise EmbeddingMismatch(
+                f"Database vectors use {stored.get('embed_model')} ({stored.get('embed_dim')}d) but settings say "
+                f"{emb['model']} ({dim}d). Run: uv run intel reembed")
+        if not stored:
+            set_embed_meta(conn)
         cols = {r[1] for r in conn.execute("PRAGMA table_info(clusters)")}
         if "triage" not in cols:
             conn.execute("ALTER TABLE clusters ADD COLUMN triage TEXT")
@@ -162,6 +179,45 @@ def init_db() -> None:
         conn.execute(
             f"CREATE VIRTUAL TABLE IF NOT EXISTS insight_vec USING vec0(insight_id INTEGER PRIMARY KEY, embedding float[{dim}] distance_metric=cosine)"
         )
+
+
+def set_embed_meta(conn) -> None:
+    emb = settings()["embedding"]
+    conn.execute("INSERT OR REPLACE INTO meta VALUES ('embed_model', ?)", (emb["model"],))
+    conn.execute("INSERT OR REPLACE INTO meta VALUES ('embed_dim', ?)", (str(emb["dim"]),))
+
+
+def reembed(progress=print) -> dict:
+    """Rebuild all vectors with the configured embedding model; recompute cluster centroids."""
+    from .embed import embed_texts
+
+    dim = settings()["embedding"]["dim"]
+    with connect() as conn:
+        conn.executescript(SCHEMA)
+        conn.execute("DROP TABLE IF EXISTS item_vec")
+        conn.execute("DROP TABLE IF EXISTS insight_vec")
+        conn.execute(f"CREATE VIRTUAL TABLE item_vec USING vec0(item_id INTEGER PRIMARY KEY, embedding float[{dim}] distance_metric=cosine)")
+        conn.execute(f"CREATE VIRTUAL TABLE insight_vec USING vec0(insight_id INTEGER PRIMARY KEY, embedding float[{dim}] distance_metric=cosine)")
+        items = conn.execute("SELECT id, title, summary FROM items WHERE embedded=1 OR cluster_id IS NOT NULL").fetchall()
+        progress(f"embedding {len(items)} items…")
+        vecs = embed_texts([f"{r['title']}. {r['summary'] or ''}" for r in items])
+        for r, v in zip(items, vecs):
+            conn.execute("INSERT INTO item_vec(item_id, embedding) VALUES (?,?)", (r["id"], to_blob(v)))
+        ins = conn.execute("SELECT id, headline, summary, why_it_matters FROM insights").fetchall()
+        progress(f"embedding {len(ins)} insights…")
+        ivecs = embed_texts([f"{r['headline']}. {r['summary']} {r['why_it_matters']}" for r in ins]) if ins else []
+        for r, v in zip(ins, ivecs):
+            conn.execute("INSERT INTO insight_vec(insight_id, embedding) VALUES (?,?)", (r["id"], to_blob(v)))
+        by_id = {r["id"]: v for r, v in zip(items, vecs)}
+        n_clusters = 0
+        for c in conn.execute("SELECT id FROM clusters").fetchall():
+            members = [by_id[i[0]] for i in conn.execute("SELECT id FROM items WHERE cluster_id=?", (c["id"],)) if i[0] in by_id]
+            if members:
+                m = np.mean(members, axis=0)
+                conn.execute("UPDATE clusters SET centroid=? WHERE id=?", (to_blob(m / np.linalg.norm(m)), c["id"]))
+                n_clusters += 1
+        set_embed_meta(conn)
+    return {"items": len(items), "insights": len(ins), "clusters": n_clusters}
 
 
 def to_blob(vec) -> bytes:

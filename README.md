@@ -9,7 +9,7 @@ collect ─► enrich ─► triage ─► analyze ─► brief/memo ─► memo
 ## Quick start
 ```bash
 uv sync
-ollama pull nomic-embed-text
+ollama pull bge-m3
 uv run intel init          # create the database and check that Ollama and claude -p work
 uv run intel run           # full pipeline: collect, enrich, analyze, daily brief
 uv run intel schedule install   # launchd: 07:00/13:00/19:00 daily, weekly memo Mon 07:45
@@ -36,16 +36,20 @@ Pages: Dashboard, Insights (filters, full analysis, 👍/👎), Trends, Knowledg
 | `intel schedule install\|uninstall\|status` | Manage the launchd jobs |
 | `intel ui` | Local web dashboard |
 | `intel gitsync` | Commit and push `vault/` now (also runs automatically after `run`/`weekly`; see `git:` in settings.yaml) |
+| `intel reembed` | Rebuild all vectors after changing `embedding.model` in settings.yaml |
 | `intel mcp` | MCP server (stdio). Registered for this folder in `.mcp.json` |
 
 ## Where memory lives
 | Store | Path | Contents |
 |---|---|---|
 | Relational + full-text | `data/intel.db` | sources, items, clusters, insights, entities, relations, trend_snapshots, runs |
-| Vectors | `data/intel.db` (`item_vec`, `insight_vec`) | 768-d `nomic-embed-text` embeddings (sqlite-vec) |
+| Vectors | `data/intel.db` (`item_vec`, `insight_vec`) | 1024-d `bge-m3` multilingual embeddings (sqlite-vec) |
 | Knowledge graph | `entities` + `relations` tables; `vault/Entities/*.md` | Companies, technologies, people, regulations, and how they relate |
 | Markdown vault | `vault/` (open it as an Obsidian vault) | `Insights/`, `Briefs/`, `Memos/`, `Entities/`, all wiki-linked |
 | Raw archive | `data/raw/YYYY-MM-DD.jsonl` | Every new item as collected (pruned after `retention.raw_days`) |
+
+## Languages
+Search and Ask work in Vietnamese as well as English. `bge-m3` puts both languages in the same vector space, so a Vietnamese question finds English articles. `ask` replies in the language of the question.
 
 ## Configuration (`config/`)
 - `sources.yaml`: add RSS feeds and other sources (types: `rss`, `hackernews`, `reddit`, `github`, `arxiv`)

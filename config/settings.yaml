@@ -7,12 +7,12 @@ llm:
 
 embedding:
   ollama_url: http://localhost:11434
-  model: nomic-embed-text
-  dim: 768
+  model: bge-m3             # multilingual (Vietnamese + English in one vector space)
+  dim: 1024                 # after changing model/dim run: uv run intel reembed
 
 pipeline:
   lookback_days: 2           # only items published within this window are processed
-  cluster_threshold: 0.78    # cosine similarity to join an existing cluster
+  cluster_threshold: 0.60    # cosine similarity to join a cluster (calibrated for bge-m3)
   cluster_active_days: 14    # clusters older than this stop absorbing items
   analyze_top_n: 15          # how many clusters get CEO analysis per run
   reanalyze_growth: 3        # re-analyze a cluster if it gained this many new items

@@ -178,6 +178,7 @@ def ask(body: Question):
         answer = llm_ask(
             f"Memory excerpts:\n{ctx}\n\nQuestion: {body.question}\n\n"
             "Answer as a strategy advisor to a CEO, using only the memory excerpts (say if they are insufficient). "
+            "Reply in the same language as the question (e.g. Vietnamese question -> Vietnamese answer). "
             "Use markdown. Cite as [insight:ID] or [item:ID].",
             system="You answer from a market-intelligence memory store.",
         )

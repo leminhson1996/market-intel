@@ -8,9 +8,9 @@ from .config import settings
 
 
 def embed_texts(texts: list[str], kind: str = "document") -> np.ndarray:
-    """Return L2-normalized embeddings. nomic-embed-text uses task prefixes."""
+    """Return L2-normalized embeddings. Only nomic models use task prefixes."""
     cfg = settings()["embedding"]
-    prefix = "search_query: " if kind == "query" else "search_document: "
+    prefix = ("search_query: " if kind == "query" else "search_document: ") if "nomic" in cfg["model"] else ""
     out = []
     with httpx.Client(timeout=120) as c:
         for i in range(0, len(texts), 32):

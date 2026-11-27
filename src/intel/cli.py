@@ -181,6 +181,7 @@ def ask(question: str, k: int = 15):
     answer = llm_ask(
         f"Memory excerpts:\n{ctx}\n\nQuestion: {question}\n\n"
         "Answer as a strategy advisor to a CEO, using only the memory excerpts (say if they are insufficient). "
+        "Reply in the same language as the question (e.g. Vietnamese question -> Vietnamese answer). "
         "Cite as [insight:ID] or [item:ID].",
         system="You answer from a market-intelligence memory store.",
     )
@@ -265,6 +266,15 @@ def prune():
     for f in RAW_DIR.glob("*.jsonl"):
         if f.stat().st_mtime < cutoff:
             f.unlink()
+
+
+@app.command()
+def reembed():
+    """Re-embed all items/insights after changing the embedding model in settings.yaml."""
+    t = time.time()
+    stats = db.reembed(progress=lambda m: console.print(f"[dim]{m}[/]"))
+    _record_run("reembed", stats, t)
+    console.print(stats)
 
 
 @app.command()
